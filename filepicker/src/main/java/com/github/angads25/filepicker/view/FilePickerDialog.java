@@ -17,17 +17,20 @@
 package com.github.angads25.filepicker.view;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
-import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -57,6 +60,7 @@ public class FilePickerDialog extends Dialog implements AdapterView.OnItemClickL
     private Context context;
     private ListView listView;
     private TextView dname, dir_path, title;
+    private ImageButton dir_btn;
     private DialogProperties properties;
     private DialogSelectionListener callbacks;
     private ArrayList<FileListItem> internalList;
@@ -66,6 +70,7 @@ public class FilePickerDialog extends Dialog implements AdapterView.OnItemClickL
     private String titleStr = null;
     private String positiveBtnNameStr = null;
     private String negativeBtnNameStr = null;
+    private String strExternalStoragePath = Utility.getExternalStorageWritable();
 
     public static final int EXTERNAL_READ_PERMISSION_GRANT = 112;
 
@@ -101,7 +106,8 @@ public class FilePickerDialog extends Dialog implements AdapterView.OnItemClickL
         setContentView(R.layout.dialog_main);
         listView = (ListView) findViewById(R.id.fileList);
         select = (Button) findViewById(R.id.select);
-        int size = MarkedItemList.getFileCount();
+        //int size = MarkedItemList.getFileCount();
+        /*
         if (size == 0) {
             select.setEnabled(false);
             int color;
@@ -112,13 +118,60 @@ public class FilePickerDialog extends Dialog implements AdapterView.OnItemClickL
             }
             select.setTextColor(Color.argb(128, Color.red(color), Color.green(color), Color.blue(color)));
         }
+        */
         dname = (TextView) findViewById(R.id.dname);
         title = (TextView) findViewById(R.id.title);
         dir_path = (TextView) findViewById(R.id.dir_path);
+        dir_btn = (ImageButton) findViewById(R.id.imageBtn);
         Button cancel = (Button) findViewById(R.id.cancel);
         if (negativeBtnNameStr != null) {
             cancel.setText(negativeBtnNameStr);
         }
+        dir_btn.setOnClickListener(new View.OnClickListener() {
+            @TargetApi(11)
+            @Override
+            public void onClick(View view) {
+                /* Creating the instance of PopupMenu */
+                PopupMenu popup = new PopupMenu(getContext(), dir_btn);
+
+                /* add items */
+                popup.getMenu().add(0, R.id.internal_storage, 1, R.string.internal_storage);
+                if (!strExternalStoragePath.isEmpty()) {
+                    popup.getMenu().add(0, R.id.external_storage, 2, R.string.external_storage);
+                }
+
+                /* registering popup with OnMenuItemClickListener */
+                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    public boolean onMenuItemClick(MenuItem item) {
+                        String strNewPath = DialogConfigs.DEFAULT_DIR;
+
+                        if (R.id.internal_storage == item.getItemId()) {
+                            /* Do nothing now. */
+                        } else if (R.id.external_storage == item.getItemId()) {
+                            strNewPath = strExternalStoragePath;
+                        }
+                        File currLoc = new File(strNewPath);
+                        dname.setText(currLoc.getName());
+                        setTitle();
+                        dir_path.setText(currLoc.getAbsolutePath());
+                        internalList.clear();
+                        if (!currLoc.getName().equals(properties.root.getName())) {
+                            FileListItem parent = new FileListItem();
+                            parent.setFilename(context.getString(R.string.label_parent_dir));
+                            parent.setDirectory(true);
+                            parent.setLocation(currLoc.getParentFile().getAbsolutePath());
+                            parent.setTime(currLoc.lastModified());
+                            internalList.add(parent);
+                        }
+                        internalList = Utility.prepareFileListEntries(internalList, currLoc, filter);
+                        mFileListAdapter.notifyDataSetChanged();
+                        return true;
+                    }
+                });
+
+                popup.show();
+            }
+        });
         select.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -165,6 +218,7 @@ public class FilePickerDialog extends Dialog implements AdapterView.OnItemClickL
                 positiveBtnNameStr = positiveBtnNameStr == null ?
                         context.getResources().getString(R.string.choose_button_label) : positiveBtnNameStr;
                 int size = MarkedItemList.getFileCount();
+                /*
                 if (size == 0) {
                     select.setEnabled(false);
                     int color;
@@ -189,6 +243,15 @@ public class FilePickerDialog extends Dialog implements AdapterView.OnItemClickL
                     String button_label = positiveBtnNameStr + " (" + size + ") ";
                     select.setText(button_label);
                 }
+                */
+
+                if (size == 0) {
+                    select.setText(positiveBtnNameStr);
+                } else {
+                    String button_label = positiveBtnNameStr + " (" + size + ") ";
+                    select.setText(button_label);
+                }
+
                 if (properties.selection_mode == DialogConfigs.SINGLE_MODE) {
                     /*  If a single file has to be selected, clear the previously checked
                      *  checkbox from the list.

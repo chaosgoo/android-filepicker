@@ -18,6 +18,7 @@ package com.github.angads25.filepicker.utils;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Environment;
 
 import com.github.angads25.filepicker.model.FileListItem;
 
@@ -92,6 +93,32 @@ public class Utility {
             internalList=new ArrayList<>();
         }
         return internalList;
+    }
+
+    public static String getExternalStorageWritable() {
+        File fileList[] = new File("/storage/").listFiles();
+        String strRet = "";
+
+        for (File file : fileList) {
+            if (file.getAbsolutePath().toLowerCase().contains("emulated")) {
+                continue;
+            }
+
+            if (file.getAbsolutePath().toLowerCase().contains("usb")) {
+                continue;
+            }
+
+            if (file.getAbsolutePath().equals("/storage/self")) {
+                continue;
+            }
+
+            if(!file.getAbsolutePath().equalsIgnoreCase(Environment.getExternalStorageDirectory().getAbsolutePath()) &&
+                    file.isDirectory() && file.canRead())
+                strRet = file.getAbsolutePath();
+            break;
+        }
+
+        return strRet;
     }
 
     /**
