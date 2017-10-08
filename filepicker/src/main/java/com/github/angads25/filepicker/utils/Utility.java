@@ -89,7 +89,7 @@ public class Utility {
             Collections.sort(internalList);
         }
         catch (NullPointerException e)
-        {   //Just dont worry, it rarely occurs.
+        {   //Just don't worry, it rarely occurs.
             e.printStackTrace();
             internalList=new ArrayList<>();
         }
@@ -126,7 +126,7 @@ public class Utility {
      * Method checks whether the Support Library has been imported by application
      * or not.
      *
-     * @return A boolean notifying value wheter support library is imported as a
+     * @return A boolean notifying value whether support library is imported as a
      * dependency or not.
      */
     private boolean hasSupportLibraryInClasspath() {
